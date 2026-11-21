@@ -361,6 +361,27 @@ export default async function handler(req, res) {
       return res.status(200).json({ success: true, data: { left: 0 } });
     }
 
+    if (action === 'keysAdmin') {
+      return res.status(200).json({
+        success: true,
+        data: {
+          products: DEFAULT_DATA.catalog.map(p => ({ id: p.Product_ID, title: p.Title })),
+          keys: [
+            { id: 'k1', code: 'LYNK-SCT-001', product: DEFAULT_DATA.catalog[0].Title, count: 12, lastEmail: 'eko@example.com', expiry: '' },
+            { id: 'k2', code: 'LYNK-SCT-002', product: DEFAULT_DATA.catalog[1].Title, count: 5, lastEmail: 'member@example.com', expiry: '' }
+          ]
+        }
+      });
+    }
+
+    if (action === 'generateKey' || action === 'editKey' || action === 'deleteKey') {
+      return res.status(200).json({
+        success: true,
+        message: 'Operasi kode berhasil',
+        data: { code: 'LYNK-' + Math.random().toString(36).substring(2, 7).toUpperCase() }
+      });
+    }
+
     if (action === 'productDetail') {
       const pid = (data && data.productId) || (payload && payload[0]) || '';
       const found = DEFAULT_DATA.catalog.find(p => p.Product_ID === pid) || DEFAULT_DATA.catalog[0];

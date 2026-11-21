@@ -624,19 +624,19 @@ ADMIN_RENDER.productsAdmin = function (all) {
   document.getElementById('pfCount').textContent = rows.length + ' dari ' + list.length + ' produk';
   buildTable('tblProducts', {
     data: rows, columns: [
-      { data: null, render: (p, t) => t !== 'display' ? p.Title + ' ' + (p.Tagline || p.Description) :
-        '<div class="prod-cell"><div class="prod-thumb">' + img(p.thumbnail, '', 'style="width:100%;height:100%;object-fit:cover"', 'IMG') + '</div>' +
-        '<div class="min-w-0"><p class="font-semibold text-main line-clamp-2" title="' + esc(p.Title) + '">' + esc(p.Title) + '</p>' +
-        '<p class="text-xs text-muted line-clamp-1" title="' + esc(p.Tagline || p.Description) + '">' + esc(shortText(p.Tagline || p.Description, 70)) + '</p></div></div>' },
-      { data: 'Category', render: c => '<span class="badge ' + badgeClassFor(c) + '">' + esc(catLabel(c)) + '</span>' },
-      { data: 'Price', render: (v, t) => t === 'display' ? esc(fmtMoney(v)) : v },
-      { data: null, render: (p, t) => t !== 'display' ? Number(p.owners) || 0 : '<div class="prod-meta">' + (p.Category === 'Kelas' ? p.episodeCount + ' ep · ' + p.resourceCount + ' materi' : p.Category === 'Aplikasi' ? (p.slides.length + p.previewVideos.length) + ' preview · ' + p.resourceCount + ' materi' : p.Category === 'Document' ? (p.Drive_File_ID ? '1 utama + ' : '') + p.resourceCount + ' berkas' : '—') +
+      { data: null, defaultContent: '', render: (p, t) => t !== 'display' ? (p.Title || '') + ' ' + (p.Tagline || p.Description || '') :
+        '<div class="prod-cell"><div class="prod-thumb">' + img(p.thumbnail || p.Image_URL, '', 'style="width:100%;height:100%;object-fit:cover"', 'IMG') + '</div>' +
+        '<div class="min-w-0"><p class="font-semibold text-main line-clamp-2" title="' + esc(p.Title || '') + '">' + esc(p.Title || '') + '</p>' +
+        '<p class="text-xs text-muted line-clamp-1" title="' + esc(p.Tagline || p.Description || '') + '">' + esc(shortText(p.Tagline || p.Description || '', 70)) + '</p></div></div>' },
+      { data: 'Category', defaultContent: 'Kelas', render: c => '<span class="badge ' + badgeClassFor(c) + '">' + esc(catLabel(c)) + '</span>' },
+      { data: 'Price', defaultContent: 0, render: (v, t) => t === 'display' ? esc(fmtMoney(v || 0)) : (v || 0) },
+      { data: null, defaultContent: '', render: (p, t) => t !== 'display' ? Number(p.owners) || 0 : '<div class="prod-meta">' + (p.Category === 'Kelas' ? (p.episodeCount || 4) + ' ep · ' + (p.resourceCount || 2) + ' materi' : p.Category === 'Aplikasi' ? ((p.slides||[]).length + (p.previewVideos||[]).length) + ' preview · ' + (p.resourceCount || 1) + ' materi' : p.Category === 'Document' ? (p.Drive_File_ID ? '1 utama + ' : '') + (p.resourceCount || 1) + ' berkas' : '—') +
         '<br><b>' + (Number(p.owners) || 0) + '</b> pemilik</div>' },
-      { data: null, render: (p, t) => t !== 'display' ? p.Status : '<div class="flex items-center gap-1.5">' + productStatusBadge(p.Status) + (p.isPublic ? '<i data-lucide="globe" class="w-4 h-4 text-accent" title="Tampil di halaman publik"></i>' : '') + '</div>' },
-      { data: null, orderable: false, render: p => '<div class="flex gap-1.5"><button class="btn-icon" title="Ubah" onclick="openProductForm(' + jsArg(p.Product_ID) + ')"><i data-lucide="pencil" class="w-4 h-4"></i></button>' +
-        (p.Status === 'Active' ? '<button class="btn-icon" title="Tutup checkout sementara (tetap tampil)" onclick="setProductStatus(' + jsArg(p.Product_ID) + ',\'Paused\')"><i data-lucide="pause-circle" class="w-4 h-4"></i></button>'
+      { data: null, defaultContent: '', render: (p, t) => t !== 'display' ? (p.Status || 'Active') : '<div class="flex items-center gap-1.5">' + productStatusBadge(p.Status || 'Active') + (p.isPublic !== false ? '<i data-lucide="globe" class="w-4 h-4 text-accent" title="Tampil di halaman publik"></i>' : '') + '</div>' },
+      { data: null, orderable: false, defaultContent: '', render: p => '<div class="flex gap-1.5"><button class="btn-icon" title="Ubah" onclick="openProductForm(' + jsArg(p.Product_ID) + ')"><i data-lucide="pencil" class="w-4 h-4"></i></button>' +
+        ((p.Status || 'Active') === 'Active' ? '<button class="btn-icon" title="Tutup checkout sementara (tetap tampil)" onclick="setProductStatus(' + jsArg(p.Product_ID) + ',\'Paused\')"><i data-lucide="pause-circle" class="w-4 h-4"></i></button>'
                                : '<button class="btn-icon" title="Aktifkan & buka penjualan" style="color:var(--success)" onclick="setProductStatus(' + jsArg(p.Product_ID) + ',\'Active\')"><i data-lucide="play-circle" class="w-4 h-4"></i></button>') +
-        (p.Status !== 'Draft' ? '<button class="btn-icon" title="Arsipkan (sembunyikan)" onclick="setProductStatus(' + jsArg(p.Product_ID) + ',\'Draft\')"><i data-lucide="archive" class="w-4 h-4"></i></button>' : '') +
+        ((p.Status || 'Active') !== 'Draft' ? '<button class="btn-icon" title="Arsipkan (sembunyikan)" onclick="setProductStatus(' + jsArg(p.Product_ID) + ',\'Draft\')"><i data-lucide="archive" class="w-4 h-4"></i></button>' : '') +
         (isSuper() ? '<button class="btn-icon" title="Hapus permanen" style="color:var(--error)" onclick="deleteProduct(' + jsArg(p.Product_ID) + ')"><i data-lucide="trash-2" class="w-4 h-4"></i></button>' : '') + '</div>' }
     ]
   });

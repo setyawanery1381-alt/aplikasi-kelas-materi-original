@@ -754,6 +754,9 @@ function setNavBadge(page, count) {
 // 10. DATATABLES & CHART HELPER
 // ════════════════════════════════════════════════════════════
 function buildTable(id, cfg) {
+  if (window.jQuery && jQuery.fn && jQuery.fn.dataTable) {
+    jQuery.fn.dataTable.ext.errMode = 'none';
+  }
   const el0 = document.getElementById(id), t0 = AppState.tables[id];
   // Tabel yang sama masih terpasang → cukup ganti barisnya (tanpa destroy/bangun ulang, posisi halaman tetap)
   if (t0 && el0 && cfg.data && !cfg.rebuild) {

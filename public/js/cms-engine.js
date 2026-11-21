@@ -245,6 +245,20 @@
         this.save();
       }
 
+      // Pastikan setiap produk memiliki properti lengkap untuk tabel Admin
+      if (this.data && this.data.catalog) {
+        this.data.catalog.forEach(p => {
+          p.Status = p.Status || 'Active';
+          p.isPublic = p.isPublic !== undefined ? p.isPublic : true;
+          p.thumbnail = p.thumbnail || p.Image_URL;
+          p.episodeCount = p.episodeCount || 4;
+          p.resourceCount = p.resourceCount || 2;
+          p.owners = p.owners !== undefined ? p.owners : 120;
+          p.slides = p.slides || [];
+          p.previewVideos = p.previewVideos || [];
+        });
+      }
+
       // Set tema default gelap seperti di screenshot
       try {
         if (!localStorage.getItem('dph3:theme')) {
@@ -502,6 +516,23 @@
 
       if (action === 'drain') {
         return { success: true, data: { left: 0 } };
+      }
+
+      if (action === 'keysAdmin') {
+        return {
+          success: true,
+          data: {
+            products: d.catalog.map(p => ({ id: p.Product_ID, title: p.Title })),
+            keys: [
+              { id: 'k1', code: 'LYNK-SCT-001', product: d.catalog[0].Title, count: 12, lastEmail: 'eko@example.com', expiry: '' },
+              { id: 'k2', code: 'LYNK-SCT-002', product: d.catalog[1].Title, count: 5, lastEmail: 'member@example.com', expiry: '' }
+            ]
+          }
+        };
+      }
+
+      if (action === 'generateKey' || action === 'editKey' || action === 'deleteKey') {
+        return { success: true, message: 'Operasi kode berhasil', data: { code: 'LYNK-' + Math.random().toString(36).substring(2, 7).toUpperCase() } };
       }
 
       // Simpan aksi admin
