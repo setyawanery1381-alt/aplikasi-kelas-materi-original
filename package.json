@@ -1,0 +1,25 @@
+{
+  "name": "portal-kelas-materi-sangcreator",
+  "version": "1.0.0",
+  "description": "Portal Kelas & Materi By Sangcreator Tech (Migrasi Google Apps Script ke Vercel Serverless)",
+  "type": "module",
+  "main": "server.js",
+  "scripts": {
+    "dev": "vercel dev",
+    "start": "node server.js",
+    "build": "echo 'Build complete'"
+  },
+  "keywords": [
+    "portal-kelas",
+    "materi",
+    "google-apps-script",
+    "vercel",
+    "serverless",
+    "sangcreator-tech"
+  ],
+  "author": "Sangcreator Tech",
+  "license": "ISC",
+  "dependencies": {
+    "googleapis": "^144.0.0"
+  }
+}
