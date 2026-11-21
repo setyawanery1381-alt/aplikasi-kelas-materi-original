@@ -377,6 +377,42 @@ export default async function handler(req, res) {
       });
     }
 
+    if (action === 'loginMemberPin' || action === 'loginMember' || action === 'login' || action === 'auth') {
+      return res.status(200).json({
+        success: true,
+        message: 'Berhasil masuk ke portal member',
+        data: {
+          token: 'sct-demo-token-active',
+          role: 'Customer',
+          email: (data && data.email) || DEFAULT_DATA.memberProfile.email,
+          name: DEFAULT_DATA.memberProfile.fullName,
+          picture: ''
+        }
+      });
+    }
+
+    if (action === 'loginSuperadmin' || action === 'adminLogin') {
+      return res.status(200).json({
+        success: true,
+        message: 'Berhasil masuk sebagai Superadmin',
+        data: {
+          token: 'sct-superadmin-token-active',
+          role: 'Superadmin',
+          email: 'admin@sangcreator.com',
+          name: 'Superadmin Sangcreator',
+          picture: ''
+        }
+      });
+    }
+
+    if (action === 'recoverAccount') {
+      return res.status(200).json({
+        success: true,
+        message: 'PIN baru Anda: 123456. Silakan gunakan untuk masuk.',
+        data: { hints: [DEFAULT_DATA.memberProfile.email] }
+      });
+    }
+
     // Default fallback
     return res.status(200).json({
       success: true,

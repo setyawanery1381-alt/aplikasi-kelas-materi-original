@@ -302,6 +302,7 @@
 
       this.installNetworkHook();
       this.applyData();
+      this.hookLogin();
       this.injectControls();
     },
 
@@ -349,6 +350,7 @@
 
         // Data Publik
         AppState.pub = AppState.pub || {};
+        AppState.pub.googleClientId = 'demo-google-client-id';
         AppState.pub.settings = d.settings;
         AppState.pub.apps = d.catalog.filter(p => p.Category === 'Aplikasi');
         AppState.pub.classes = d.catalog.filter(p => p.Category === 'Kelas');
@@ -538,6 +540,62 @@
         };
       }
 
+      // Otentikasi Login Member & Admin
+      if (action === 'loginMemberPin' || action === 'loginMember' || action === 'login' || action === 'auth') {
+        const bootData = {
+          settings: d.settings,
+          profile: d.memberProfile,
+          announcements: d.announcement.active ? [d.announcement] : [],
+          catalog: d.catalog,
+          bootcamp: {
+            mine: [
+              {
+                id: '1f5fed89-d22f-44ca-8871-95c4281f8b94',
+                title: d.bootcamp.title,
+                status: 'Disetujui',
+                sessions: d.bootcamp.sessions
+              }
+            ]
+          },
+          orders: [],
+          showcase: d.showcase
+        };
+        return {
+          success: true,
+          message: 'Berhasil masuk ke portal member',
+          data: {
+            token: 'sct-demo-token-active',
+            role: 'Customer',
+            email: (data && data.email) || d.memberProfile.email,
+            name: d.memberProfile.fullName,
+            picture: '',
+            boot: bootData
+          }
+        };
+      }
+
+      if (action === 'loginSuperadmin' || action === 'adminLogin') {
+        return {
+          success: true,
+          message: 'Berhasil masuk sebagai Superadmin',
+          data: {
+            token: 'sct-superadmin-token-active',
+            role: 'Superadmin',
+            email: 'admin@sangcreator.com',
+            name: 'Superadmin Sangcreator',
+            picture: ''
+          }
+        };
+      }
+
+      if (action === 'recoverAccount') {
+        return {
+          success: true,
+          message: 'PIN Anda: 123456. Silakan gunakan untuk masuk.',
+          data: { hints: [d.memberProfile.email] }
+        };
+      }
+
       return { success: true, data: { message: `Aksi '${action}' berhasil diproses.` } };
     },
 
@@ -580,6 +638,85 @@
         go('explore');
       }
       setTimeout(() => location.reload(), 300);
+    },
+
+    directLogin(type) {
+      if (type === 'admin') {
+        const s = {
+          token: 'sct-admin-token-active',
+          role: 'Superadmin',
+          email: 'admin@sangcreator.com',
+          name: 'Super Admin Sangcreator',
+          picture: ''
+        };
+        try { localStorage.setItem('dph3:session', JSON.stringify(s)); } catch (e) {}
+        if (typeof saveSession === 'function') saveSession(s);
+        if (typeof showToast === 'function') showToast('Selamat Datang', 'Masuk sebagai Superadmin', 'success');
+        this.applyData();
+        if (typeof AdminLibs !== 'undefined') AdminLibs.ready();
+        if (typeof AdminBundle !== 'undefined') AdminBundle.ready().catch(()=>{});
+        if (typeof Admin !== 'undefined') Admin.boot();
+        if (typeof go === 'function') go('admin/dashboard');
+        else location.hash = '#/admin/dashboard';
+      } else {
+        const s = {
+          token: 'sct-demo-token-active',
+          role: 'Customer',
+          email: this.data.memberProfile.email,
+          name: this.data.memberProfile.fullName,
+          picture: ''
+        };
+        try { localStorage.setItem('dph3:session', JSON.stringify(s)); } catch (e) {}
+        if (typeof saveSession === 'function') saveSession(s);
+        if (typeof showToast === 'function') showToast('Berhasil Masuk', 'Selamat datang ' + this.data.memberProfile.fullName, 'success');
+        this.applyData();
+        if (typeof go === 'function') go('home');
+        else location.hash = '#/home';
+        if (typeof Member !== 'undefined') {
+          Member.renderMounted();
+          Member.showAnnouncements();
+        }
+      }
+      setTimeout(() => {
+        const sel = document.getElementById('sctModeSelector');
+        if (sel) sel.value = type;
+      }, 50);
+    },
+
+    hookLogin() {
+      if (typeof Login === 'undefined') return;
+
+      Login.initGoogle = function () {
+        const memberBox = document.getElementById('gsiButton') || document.getElementById('gsiSlotMember');
+        if (memberBox) {
+          memberBox.innerHTML = `
+            <div style="width:100%;display:grid;gap:10px;">
+              <button type="button" onclick="CMS.directLogin('member')" class="btn-primary w-full !py-3 !rounded-xl !text-sm flex items-center justify-center gap-2 shadow-lg hover:scale-[1.01] transition-all" style="background:#1E40AF;">
+                <svg class="w-5 h-5 flex-none" viewBox="0 0 24 24"><path fill="#EA4335" d="M12 5c1.6 0 3 .6 4.1 1.7l3.1-3.1C17.3 1.8 14.8 1 12 1 7.5 1 3.7 3.6 1.9 7.3l3.7 2.9C6.5 7.3 9 5 12 5z"/><path fill="#4285F4" d="M23.5 12.3c0-.8-.1-1.7-.2-2.3H12v4.6h6.5c-.3 1.5-1.1 2.8-2.4 3.7l3.7 2.9c2.2-2 3.7-5 3.7-8.9z"/><path fill="#FBBC05" d="M5.6 14.8c-.2-.7-.4-1.5-.4-2.3s.2-1.6.4-2.3L1.9 7.3C.7 9.7 0 12.3 0 15s.7 5.3 1.9 7.7l3.7-2.9z"/><path fill="#34A853" d="M12 23c3.2 0 6-1.1 8-3l-3.7-2.9c-1.1.7-2.5 1.2-4.3 1.2-3 0-5.5-2.3-6.4-5.2L1.9 16c1.8 3.7 5.6 7 10.1 7z"/></svg>
+                <span><b>Masuk Langsung dengan Google</b> (Eko Setyawan)</span>
+              </button>
+            </div>
+          `;
+          memberBox.style.flexDirection = 'column';
+        }
+
+        const adminBox = document.getElementById('gsiSlotAdmin');
+        if (adminBox) {
+          adminBox.innerHTML = `
+            <div style="width:100%;display:grid;gap:10px;">
+              <button type="button" onclick="CMS.directLogin('admin')" class="btn-primary w-full !py-3 !rounded-xl !text-sm flex items-center justify-center gap-2 shadow-lg hover:scale-[1.01] transition-all" style="background:#4F46E5;">
+                <i data-lucide="shield-check" class="w-5 h-5 flex-none"></i>
+                <span><b>Masuk Cepat Sebagai Superadmin</b></span>
+              </button>
+            </div>
+          `;
+        }
+        if (typeof refreshIcons === 'function') refreshIcons();
+      };
+
+      if (location.hash.includes('login')) {
+        setTimeout(() => { if (typeof Login !== 'undefined' && Login.initGoogle) Login.initGoogle(); }, 60);
+      }
     },
 
     openEditor(tab) {
@@ -1044,13 +1181,14 @@
   CMS.init();
 
   if (typeof window !== 'undefined') {
-    window.addEventListener('DOMContentLoaded', () => { CMS.applyData(); });
+    window.addEventListener('DOMContentLoaded', () => { CMS.applyData(); CMS.hookLogin(); });
     window.addEventListener('load', () => {
       CMS.applyData();
+      CMS.hookLogin();
       if (typeof Member !== 'undefined' && typeof AppState !== 'undefined' && AppState.role === 'Customer' && !AppState.m) {
         Member.refresh();
       }
     });
-    window.addEventListener('hashchange', () => { CMS.applyData(); });
+    window.addEventListener('hashchange', () => { CMS.applyData(); CMS.hookLogin(); });
   }
 })();
