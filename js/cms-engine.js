@@ -35,7 +35,7 @@
       nickname: 'Eko',
       email: 'setyawanery1381@gmail.com',
       whatsapp: '081319894236',
-      role: 'member',
+      role: 'Customer',
       complete: true
     },
     announcement: {
@@ -252,17 +252,17 @@
         }
       } catch (e) { /* */ }
 
-      // Pastikan ada sesi awal (member Eko)
+      // Pastikan ada sesi awal (member Eko - Customer)
       let s = null;
       try {
         const v = localStorage.getItem('dph3:session');
         if (v) s = JSON.parse(v);
       } catch (e) { /* */ }
 
-      if (!s || !s.role) {
+      if (!s || !s.role || s.role === 'member') {
         const initSession = {
           token: 'sct-demo-token-active',
-          role: 'member',
+          role: 'Customer',
           email: this.data.memberProfile.email,
           name: this.data.memberProfile.fullName,
           picture: ''
@@ -270,8 +270,8 @@
         try { localStorage.setItem('dph3:session', JSON.stringify(initSession)); } catch (e) {}
       }
 
-      // Default route ke #/home jika belum ada hash
-      if (!location.hash || location.hash === '#' || location.hash === '#/') {
+      // Default route ke #/home jika belum ada hash atau tersasar ke #/login
+      if (!location.hash || location.hash === '#' || location.hash === '#/' || location.hash === '#/login') {
         location.hash = '#/home';
       }
 
@@ -498,13 +498,13 @@
       if (mode === 'member') {
         const s = {
           token: 'sct-demo-token-active',
-          role: 'member',
+          role: 'Customer',
           email: this.data.memberProfile.email,
           name: this.data.memberProfile.fullName,
           picture: ''
         };
         try { localStorage.setItem('dph3:session', JSON.stringify(s)); } catch (e) {}
-        AppState.role = 'member';
+        AppState.role = 'Customer';
         AppState.token = 'sct-demo-token-active';
         AppState.email = this.data.memberProfile.email;
         AppState.name = this.data.memberProfile.fullName;
@@ -513,13 +513,13 @@
       } else if (mode === 'admin') {
         const s = {
           token: 'sct-admin-token-active',
-          role: 'superadmin',
+          role: 'Superadmin',
           email: 'admin@sangcreator.com',
           name: 'Super Admin Sangcreator',
           picture: ''
         };
         try { localStorage.setItem('dph3:session', JSON.stringify(s)); } catch (e) {}
-        AppState.role = 'superadmin';
+        AppState.role = 'Superadmin';
         AppState.token = 'sct-admin-token-active';
         AppState.email = 'admin@sangcreator.com';
         AppState.name = 'Super Admin Sangcreator';
@@ -983,8 +983,8 @@
         </button>
         <div style="width:1px;height:16px;background:#334155;margin:0 2px;"></div>
         <select id="sctModeSelector" onchange="CMS.switchMode(this.value)" style="background:#1E293B;color:#F8FAFC;font-size:11px;font-weight:600;border-radius:9999px;border:1px solid #334155;padding:4px 10px;cursor:pointer;outline:none;">
-          <option value="member" ${typeof AppState !== 'undefined' && AppState.role === 'member' ? 'selected' : ''}>👤 Mode Member</option>
-          <option value="admin" ${typeof AppState !== 'undefined' && (AppState.role === 'admin' || AppState.role === 'superadmin') ? 'selected' : ''}>🛠️ Mode Superadmin</option>
+          <option value="member" ${typeof AppState !== 'undefined' && AppState.role === 'Customer' ? 'selected' : ''}>👤 Mode Member</option>
+          <option value="admin" ${typeof AppState !== 'undefined' && (AppState.role === 'Admin' || AppState.role === 'Superadmin') ? 'selected' : ''}>🛠️ Mode Superadmin</option>
           <option value="public" ${typeof AppState === 'undefined' || !AppState.role ? 'selected' : ''}>🌐 Mode Publik</option>
         </select>
       `;
