@@ -270,6 +270,31 @@
         try { localStorage.setItem('dph3:session', JSON.stringify(initSession)); } catch (e) {}
       }
 
+      // Pre-seed cache bootstrap agar instan dan tidak pernah kosong saat offline / initial load
+      try {
+        const bootData = {
+          settings: this.data.settings,
+          profile: this.data.memberProfile,
+          announcements: this.data.announcement.active ? [this.data.announcement] : [],
+          catalog: this.data.catalog,
+          bootcamp: {
+            mine: [
+              {
+                id: '1f5fed89-d22f-44ca-8871-95c4281f8b94',
+                title: this.data.bootcamp.title,
+                status: 'Disetujui',
+                sessions: this.data.bootcamp.sessions
+              }
+            ]
+          },
+          orders: [],
+          showcase: this.data.showcase
+        };
+        const bootPayload = { t: Date.now(), h: 'boot-init', data: bootData };
+        localStorage.setItem('dph3:u:' + this.data.memberProfile.email + ':boot', JSON.stringify(bootPayload));
+        localStorage.setItem('dph3:u:anon:boot', JSON.stringify(bootPayload));
+      } catch (e) {}
+
       // Default route ke #/home jika belum ada hash atau tersasar ke #/login
       if (!location.hash || location.hash === '#' || location.hash === '#/' || location.hash === '#/login') {
         location.hash = '#/home';
@@ -355,16 +380,22 @@
 
       window.fetch = async function (url, opts) {
         const urlStr = String(url || '');
-        if (urlStr.includes('script.google.com') && opts && opts.method === 'POST') {
+        if (opts && (opts.method === 'POST' || opts.method === 'post' || !opts.method)) {
           let body = {};
-          try { body = JSON.parse(opts.body); } catch (e) {}
+          if (typeof opts.body === 'string') {
+            try { body = JSON.parse(opts.body); } catch (e) { body = {}; }
+          } else if (opts.body && typeof opts.body === 'object') {
+            body = opts.body;
+          }
           const act = body.action || '';
-          const mockRes = self.handleApiAction(act, body.data || {}, body.token || '');
-          if (mockRes) {
-            return new Response(JSON.stringify(mockRes), {
-              status: 200,
-              headers: { 'Content-Type': 'application/json' }
-            });
+          if (act || urlStr.includes('/api/rpc') || urlStr.includes('script.google.com')) {
+            const mockRes = self.handleApiAction(act, body.data || {}, body.token || '');
+            if (mockRes) {
+              return new Response(JSON.stringify(mockRes), {
+                status: 200,
+                headers: { 'Content-Type': 'application/json; charset=utf-8' }
+              });
+            }
           }
         }
         return origFetch.apply(this, arguments);
@@ -491,7 +522,23 @@
         return { success: true, message: 'Pengaturan berhasil disimpan' };
       }
 
-      return null;
+      if (action === 'productDetail') {
+        const pid = (data && data.productId) || '';
+        const found = d.catalog.find(p => p.Product_ID === pid) || d.catalog[0];
+        return {
+          success: true,
+          data: Object.assign({}, found, {
+            owned: true,
+            episodes: [
+              { id: 'ep-1', title: 'Modul 1: Panduan Memulai & Pengenalan', videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ' },
+              { id: 'ep-2', title: 'Modul 2: Implementasi Langkah demi Langkah', videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ' },
+              { id: 'ep-3', title: 'Modul 3: Konfigurasi & Optimalisasi', videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ' }
+            ]
+          })
+        };
+      }
+
+      return { success: true, data: { message: `Aksi '${action}' berhasil diproses.` } };
     },
 
     switchMode(mode) {
@@ -995,4 +1042,15 @@
   };
 
   CMS.init();
+
+  if (typeof window !== 'undefined') {
+    window.addEventListener('DOMContentLoaded', () => { CMS.applyData(); });
+    window.addEventListener('load', () => {
+      CMS.applyData();
+      if (typeof Member !== 'undefined' && typeof AppState !== 'undefined' && AppState.role === 'Customer' && !AppState.m) {
+        Member.refresh();
+      }
+    });
+    window.addEventListener('hashchange', () => { CMS.applyData(); });
+  }
 })();

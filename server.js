@@ -23,7 +23,7 @@ const server = http.createServer((req, res) => {
   let reqPath = req.url.split('?')[0];
 
   // Route API RPC (Vercel Serverless Function simulator)
-  if (reqPath.startsWith('/api/rpc')) {
+  if (reqPath.startsWith('/api/rpc') || reqPath.includes('/api/rpc')) {
     let body = '';
     req.on('data', chunk => body += chunk);
     req.on('end', () => {

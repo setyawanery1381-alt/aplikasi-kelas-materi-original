@@ -361,6 +361,22 @@ export default async function handler(req, res) {
       return res.status(200).json({ success: true, data: { left: 0 } });
     }
 
+    if (action === 'productDetail') {
+      const pid = (data && data.productId) || (payload && payload[0]) || '';
+      const found = DEFAULT_DATA.catalog.find(p => p.Product_ID === pid) || DEFAULT_DATA.catalog[0];
+      return res.status(200).json({
+        success: true,
+        data: Object.assign({}, found, {
+          owned: true,
+          episodes: [
+            { id: 'ep-1', title: 'Modul 1: Panduan Memulai & Pengenalan', videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ' },
+            { id: 'ep-2', title: 'Modul 2: Implementasi Langkah demi Langkah', videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ' },
+            { id: 'ep-3', title: 'Modul 3: Konfigurasi & Optimalisasi', videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ' }
+          ]
+        })
+      });
+    }
+
     // Default fallback
     return res.status(200).json({
       success: true,
